@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<title>TXT ➜ XML 包裝工具（前端版）</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+    body {
+        margin: 0;
+        background: #f5f6fa;
+        font-family: "Segoe UI", Roboto, Helvetica, Arial;
+        display: flex;
+        justify-content: center;
+        padding: 40px 20px;
+    }
+
+    .container {
+        background: #ffffff;
+        width: 100%;
+        max-width: 700px;
+        padding: 30px 40px;
+        border-radius: 16px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+        margin-top: 0;
+        color: #2c3e50;
+        text-align: center;
+    }
+
+    label {
+        display: block;
+        margin-top: 15px;
+        margin-bottom: 6px;
+        font-weight: bold;
+        color: #34495e;
+    }
+
+    input[type="file"],
+    input[type="text"] {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 15px;
+        border-radius: 8px;
+        border: 1px solid #dcdde1;
+        outline: none;
+        margin-bottom: 10px;
+        transition: 0.2s;
+    }
+
+    input[type="text"]:focus {
+        border-color: #4b7bec;
+        box-shadow: 0 0 0 3px rgba(75,123,236,0.15);
+    }
+
+    .attr-block {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .attr-block input {
+        flex: 1;
+    }
+
+    .btn {
+        padding: 10px 16px;
+        font-size: 15px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .btn-add {
+        background: #26de81;
+        color: white;
+    }
+
+    .btn-add:hover {
+        background: #20bf6b;
+    }
+
+    .btn-del {
+        background: #fc5c65;
+        color: white;
+        padding: 10px 14px;
+    }
+
+    .btn-del:hover {
+        background: #eb3b5a;
+    }
+
+    .btn-generate {
+        margin-top: 20px;
+        width: 100%;
+        background: #3867d6;
+        color: white;
+        font-size: 17px;
+        padding: 14px;
+    }
+
+    .btn-generate:hover {
+        background: #304cbb;
+    }
+</style>
+
+<script>
+function addAttribute() {
+    const container = document.getElementById("attrs");
+
+    const block = document.createElement("div");
+    block.className = "attr-block";
+
+    block.innerHTML = `
+        <input name="attr_name" placeholder="attribute 名稱" required>
+        <input name="attr_value" placeholder="attribute 值">
+        <button type="button" class="btn btn-del" onclick="this.parentElement.remove()">刪除</button>
+    `;
+
+    container.appendChild(block);
+}
+
+function generateXML() {
+    const fileInput = document.getElementById("txtfile");
+    if (!fileInput.files.length) {
+        alert("請先上傳 txt 檔案！");
+        return;
+    }
+    const file = fileInput.files[0];
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const originalText = event.target.result;
+
+        const names = Array.from(document.getElementsByName("attr_name")).map(e => e.value.trim());
+        const values = Array.from(document.getElementsByName("attr_value")).map(e => e.value.trim());
+
+        let attrParts = [];
+        for (let i = 0; i < names.length; i++) {
+            if (names[i] !== "") {
+                attrParts.push(`${names[i]}="${values[i]}"`);
+            }
+        }
+
+        const attrStr = attrParts.join(" ");
+
+        const xmlContent =
+`<?xml version="1.0" encoding="UTF-8"?>
+<text ${attrStr}>
+${originalText}
+</text>`;
+
+        const blob = new Blob([xmlContent], { type: "application/xml" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        const outName = file.name.replace(".txt", "") + ".xml";
+        link.download = outName;
+        link.click();
+    };
+
+    reader.readAsText(file, "utf-8");
+}
+</script>
+
+</head>
+
+<body>
+
+<div class="container">
+    <h2>TXT ➜ XML 包裝工具</h2>
+
+    <label>上傳純文字檔 (.txt)</label>
+    <input id="txtfile" type="file" accept=".txt">
+
+    <label>XML Attributes</label>
+    <div id="attrs"></div>
+
+    <button class="btn btn-add" type="button" onclick="addAttribute()">＋ 新增 attribute</button>
+
+    <button class="btn btn-generate" onclick="generateXML()">生成 XML 並下載</button>
+</div>
+
+</body>
+</html>
